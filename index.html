@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alfaza Brilink V2</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+<body>
+
+<div class="container">
+
+<h2>ALFAZA CELL BRILINK</h2>
+
+<div class="saldo-box">
+Saldo Bank : <b id="saldoBank">0</b><br>
+Saldo Cash : <b id="saldoCash">0</b>
+</div>
+
+<div class="menu">
+<button onclick="tambahTransaksi()">Tambah Transaksi</button>
+<button onclick="bukaLaporan()">Laporan</button>
+<button onclick="resetSaldo()">Reset Saldo Aman</button>
+</div>
+
+<div id="laporanArea" style="display:none">
+
+<h3>Laporan Harian</h3>
+
+<canvas id="chartLaporan"></canvas>
+
+<div id="laporanData"></div>
+
+<div class="btn-row">
+<button onclick="shareFoto()">Share Foto</button>
+<button onclick="sharePDF()">Share PDF</button>
+</div>
+
+</div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
