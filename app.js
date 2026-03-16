@@ -84,22 +84,6 @@ let tambahSaldoJenis = 'Bank';
 let filterKategoriAktif = 'all', filterTambahSaldoAktif = 'all';
 
 // ==================== FORMAT ANGKA (DENGAN TITIK) ====================
-function formatRupiah(angka, prefix = '') {
-    let number_string = angka.replace(/[^,\d]/g, '').toString(),
-        split = number_string.split(','),
-        sisa = split[0].length % 3,
-        rupiah = split[0].substr(0, sisa),
-        ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-    if (ribuan) {
-        let separator = sisa ? '.' : '';
-        rupiah += separator + ribuan.join('.');
-    }
-
-    rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-    return prefix === undefined ? rupiah : (rupiah ? 'Rp ' + rupiah : '');
-}
-
 // Format input saat mengetik (langsung tambah titik)
 window.fmt = function(el) {
     let nilai = el.value.replace(/[^0-9]/g, ''); // Hanya angka
@@ -577,7 +561,7 @@ window.hitungLaporan = function() {
     `;
 }
 
-// ==================== SHARE FOTO ====================
+// ==================== SHARE FOTO (VERSI ANDROID APK) ====================
 window.shareLaporanFoto = async function() {
     const element = document.getElementById('report-card');
     if (!element) {
@@ -587,6 +571,8 @@ window.shareLaporanFoto = async function() {
 
     try {
         gsToast('📸 Memproses foto laporan...');
+        
+        // Buat canvas dari elemen laporan
         const canvas = await html2canvas(element, {
             scale: 2,
             backgroundColor: '#ffffff',
@@ -595,32 +581,43 @@ window.shareLaporanFoto = async function() {
             useCORS: true
         });
 
-        const imageData = canvas.toDataURL('image/png');
-
-        if (navigator.share) {
-            const blob = await (await fetch(imageData)).blob();
-            const file = new File([blob], 'laporan-alfaza.png', { type: 'image/png' });
-            await navigator.share({
-                title: 'Laporan Alfaza Cell',
-                text: 'Berikut laporan hari ini',
-                files: [file]
-            });
-        } else {
-            const link = document.createElement('a');
-            link.download = 'laporan-alfaza.png';
-            link.href = imageData;
-            link.click();
-            gsToast('✅ Foto laporan tersimpan');
-        }
+        // Konversi ke blob
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        
+        // Buat URL object
+        const url = URL.createObjectURL(blob);
+        
+        // Buat link download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'laporan-alfaza-' + new Date().getTime() + '.png';
+        
+        // Simulasikan klik
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Bersihkan URL object
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        
+        gsToast('✅ Foto laporan tersimpan di folder Download');
+        
+        // Tanya user mau share manual
+        setTimeout(async () => {
+            await gsAlert(
+                'Foto sudah tersimpan di folder Download.\n\n' +
+                'Sekarang buka WhatsApp/Telegram dan lampirkan foto tersebut secara manual.',
+                '📸 Berhasil'
+            );
+        }, 500);
+        
     } catch (error) {
         console.error(error);
-        if (error.name !== 'AbortError') {
-            gsAlert('Gagal memproses foto: ' + error.message, '❌ Error');
-        }
+        gsAlert('Gagal memproses foto: ' + error.message, '❌ Error');
     }
 }
 
-// ==================== SHARE PDF ====================
+// ==================== SHARE PDF (VERSI ANDROID APK) ====================
 window.shareLaporanPdf = async function() {
     const element = document.getElementById('report-card');
     if (!element) {
@@ -630,6 +627,8 @@ window.shareLaporanPdf = async function() {
 
     try {
         gsToast('📄 Membuat PDF...');
+        
+        // Buat canvas dari elemen laporan
         const canvas = await html2canvas(element, {
             scale: 2,
             backgroundColor: '#ffffff',
@@ -639,6 +638,8 @@ window.shareLaporanPdf = async function() {
         });
 
         const imgData = canvas.toDataURL('image/png');
+        
+        // Buat PDF
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({
             orientation: 'portrait',
@@ -647,29 +648,38 @@ window.shareLaporanPdf = async function() {
         });
 
         pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+        
+        // Konversi ke blob
         const pdfBlob = pdf.output('blob');
-
-        if (navigator.share) {
-            const file = new File([pdfBlob], 'laporan-alfaza.pdf', { type: 'application/pdf' });
-            await navigator.share({
-                title: 'Laporan Alfaza Cell',
-                text: 'Berikut laporan hari ini dalam format PDF',
-                files: [file]
-            });
-        } else {
-            const url = URL.createObjectURL(pdfBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'laporan-alfaza.pdf';
-            link.click();
-            URL.revokeObjectURL(url);
-            gsToast('✅ PDF laporan tersimpan');
-        }
+        const url = URL.createObjectURL(pdfBlob);
+        
+        // Buat link download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'laporan-alfaza-' + new Date().getTime() + '.pdf';
+        
+        // Simulasikan klik
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Bersihkan URL object
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        
+        gsToast('✅ PDF laporan tersimpan di folder Download');
+        
+        // Tanya user mau share manual
+        setTimeout(async () => {
+            await gsAlert(
+                'PDF sudah tersimpan di folder Download.\n\n' +
+                'Sekarang buka WhatsApp/Telegram dan lampirkan file PDF tersebut secara manual.',
+                '📄 Berhasil'
+            );
+        }, 500);
+        
     } catch (error) {
         console.error(error);
-        if (error.name !== 'AbortError') {
-            gsAlert('Gagal membuat PDF: ' + error.message, '❌ Error');
-        }
+        gsAlert('Gagal membuat PDF: ' + error.message, '❌ Error');
     }
 }
 
